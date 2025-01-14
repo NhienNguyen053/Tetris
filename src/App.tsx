@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TetrisBoard } from "./components/TetrisBoard";
 import { Grid, Tetromino, TETROMINOES } from "./Types";
-import { createEmptyGrid, COLS, checkForCellBelow, filterPositions, getRandomTetrominoKey } from "./utils";
+import { createEmptyGrid, COLS, checkForCells, filterPositions, getRandomTetrominoKey } from "./utils";
 
 function Tetris() {
   const [grid, setGrid] = useState<Grid>(createEmptyGrid());
@@ -42,15 +42,26 @@ function Tetris() {
     setTetrominoAtBottom(false); // This is only temporary for now
   };
 
-  const moveTetrominoDown = () => {
+  const moveTetromino = (direction: 'down' | 'left' | 'right') => {
     const currentPosition = tetrominoPositions;
-    const bottomPositions = filterPositions(currentPosition);
-    const isBlocked = checkForCellBelow(bottomPositions, grid);
+    const directionPositions = filterPositions(currentPosition, direction);
+    const isBlocked = checkForCells(directionPositions, grid, direction);
     if (!isBlocked) {
-      const newPositions = tetrominoPositions.map((position) => ({
-        row: position.row + 1,
-        col: position.col,
-      }));
+      const newPositions = tetrominoPositions.map((position) => {
+        let newRow = position.row;
+        let newCol = position.col;
+        if (direction === "down") {
+          newRow = position.row + 1;
+        } else if (direction === "left") {
+          newCol = position.col - 1;
+        } else if (direction === "right") {
+          newCol = position.col + 1;
+        }
+        return {
+          row: newRow,
+          col: newCol,
+        };
+      });
 
       const newGrid = grid.map((row) => [...row]);
 
@@ -69,6 +80,7 @@ function Tetris() {
       setTetrominoPositions(newPositions);
       setTetrominoAtBottom(false);
     } else {
+      setTetrominoPositions([]);
       insertTetromino();
       setTetrominoAtBottom(true);
     }
@@ -78,9 +90,32 @@ function Tetris() {
     if (tetrominoAtBottom) {
       insertTetromino();
     } else {
-      moveTetrominoDown();
+      moveTetromino('down');
     }
   };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (!isRunning) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        moveTetromino('down');
+        break;
+      case 'ArrowLeft':
+        moveTetromino('left');
+        break;
+      case 'ArrowRight':
+        moveTetromino('right');
+        break;
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRunning, grid, tetrominoPositions]);
 
   useEffect(() => {
     if (isRunning) {

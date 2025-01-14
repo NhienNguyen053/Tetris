@@ -14,8 +14,14 @@ export const TetrisBoard: React.FC<TetrisBoardProps> = ({ grid }) => {
           {row.map((column, colIndex) => (
             <div
               key={colIndex}
-              className={`column ${column.value !== 0 ? "filled" : ""}`}
-              style={{ backgroundColor: column.color ? column.color : undefined }}
+              className={`column ${
+                column.value !== 0
+                  ? `filled color-${column.color?.replace("#", "")}`
+                  : ""
+              }`}
+              style={{
+                backgroundColor: column.color ? column.color : undefined,
+              }}
             ></div>
           ))}
         </div>
